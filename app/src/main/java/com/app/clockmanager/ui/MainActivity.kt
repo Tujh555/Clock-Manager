@@ -5,7 +5,7 @@ import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -42,15 +42,26 @@ class MainActivity : AppCompatActivity() {
     private val alarmBuilder = AlarmBuilder()
 
     private val getDrawOverlayPermission = registerForActivityResult(
-        DrawOverlayContract()
+        DrawOverlayContract(this)
     ) { result ->
         Log.d("MyLogs", result.toString())
 
-        Toast.makeText(
-            this,
-            if (result) "Разрешение получено!" else "Разрешение не получено((",
-            Toast.LENGTH_SHORT
-        ).show()
+        showToast(
+            if (result) "Разрешение получено!" else "Разрешение не получено(("
+        )
+    }
+
+    private val drawOverlayDialog by lazy {
+        AlertDialog.Builder(this)
+            .setMessage("Разрешите показывать окна поверх других приложений.")
+            .setTitle("Окна")
+            .setNegativeButton("Отмена") { _, _ ->
+                showToast("Разрешение не получено((")
+            }
+            .setPositiveButton("Ок") { _, _ ->
+                getDrawOverlayPermission.launch(null)
+            }
+            .create()
     }
 
     private val positiveStartClickListener = View.OnClickListener {
@@ -97,8 +108,8 @@ class MainActivity : AppCompatActivity() {
         viewModel.loadAlarms()
         followOnData()
 
-        if (Settings.canDrawOverlays(this)) {
-
+        if (!Settings.canDrawOverlays(this)) {
+            drawOverlayDialog.show()
         }
     }
 
@@ -121,6 +132,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun showToast(message: String) = Toast.makeText(
+        this,
+        message,
+        Toast.LENGTH_SHORT
+    ).show()
 
     private fun getTimerPick(titleText: String) = MaterialTimePicker.Builder()
         .setTimeFormat(TimeFormat.CLOCK_24H)

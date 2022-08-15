@@ -46,7 +46,10 @@ class AlarmAdapter : RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder>() {
             binding.run {
                 tvStartTime.text = alarm.startTime.toStringTime()
                 tvEndTime.text = alarm.endTime.toStringTime()
-                tvInterval.text = root.context.getString(R.string.period_text, alarm.interval.toString())
+                tvInterval.text = root.context.getString(
+                    R.string.period_text,
+                    alarm.interval.div(60 * 1000).toString()
+                )
                 swOnAlarm.isActivated = alarm.isActive
             }
         }

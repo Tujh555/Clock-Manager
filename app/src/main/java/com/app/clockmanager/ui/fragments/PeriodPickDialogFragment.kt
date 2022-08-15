@@ -49,7 +49,7 @@ class PeriodPickDialogFragment : DialogFragment() {
                         if (inputString.isBlank()) return
 
                         try {
-                            period = inputString.toInt()
+                            period = inputString.toInt() * 60 * 1000
 
                             if (period <= 0) {
                                 etPeriod.error = "Дурак блять"

@@ -50,7 +50,7 @@ class AlarmAdapter : RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder>() {
                     R.string.period_text,
                     alarm.interval.div(60 * 1000).toString()
                 )
-                swOnAlarm.isActivated = alarm.isActive
+                swOnAlarm.isChecked = alarm.isActive
             }
         }
     }

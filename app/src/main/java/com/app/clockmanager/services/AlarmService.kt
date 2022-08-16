@@ -52,7 +52,7 @@ class AlarmService : LifecycleService() {
                     player.play()
 
                     startActivity(
-                        Intent(this, WakeUpActivity::class.java).apply {
+                        Intent(applicationContext, WakeUpActivity::class.java).apply {
                             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
                     )
@@ -94,14 +94,27 @@ class AlarmService : LifecycleService() {
             .setAutoCancel(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setShowWhen(false)
-            .setOnlyAlertOnce(true)
             .setChannelId(NOTIFICATION_CHANNEL_ID)
+            .addAction(
+                NotificationCompat.Action(
+                    R.drawable.ic_baseline_arrow_right_alt_24,
+                    "Stop",
+                    PendingIntent.getService(
+                        this,
+                        0,
+                        Intent(applicationContext, AlarmService::class.java).apply {
+                            action = ServiceCommands.STOP.toString()
+                        },
+                        PendingIntent.FLAG_IMMUTABLE
+                    )
+                )
+            )
 
         builder.setDeleteIntent(
             PendingIntent.getService(
                 this,
                 0,
-                Intent(this, AlarmService::class.java).apply {
+                Intent(applicationContext, AlarmService::class.java).apply {
                     action = ServiceCommands.STOP.toString()
                 },
                 PendingIntent.FLAG_IMMUTABLE

@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.PowerManager
 import android.util.Log
+import com.app.clockmanager.AlarmUtils.getPendingIntentBasedOnTime
 import com.app.clockmanager.data.Alarm
 import com.app.clockmanager.services.AlarmService
 import com.app.clockmanager.services.ServiceCommands
@@ -37,22 +38,9 @@ class AlarmBroadcast : BroadcastReceiver() {
         wakeLock.release()
     }
 
-    fun setAlarm(context: Context, alarm: Alarm): List<PendingIntent> {
+    fun setAlarm(context: Context, alarm: Alarm) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val broadcastIntent = Intent(context, AlarmBroadcast::class.java)
         val intents = mutableListOf<PendingIntent>()
-
-        fun getPendingIntentBasedOnTime(time: Long): PendingIntent {
-            val res = PendingIntent.getBroadcast(
-                context,
-                time.hashCode(),
-                broadcastIntent,
-                PendingIntent.FLAG_IMMUTABLE
-            )
-
-            intents.add(res)
-            return res
-        }
 
         val activityIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -61,7 +49,7 @@ class AlarmBroadcast : BroadcastReceiver() {
         for (time in (alarm.startTime..alarm.endTime) step alarm.interval.toLong()) {
             alarmManager.setClock(
                 getAlarmInfo(time, context, activityIntent),
-                getPendingIntentBasedOnTime(time)
+                getPendingIntentBasedOnTime(context, time)
             )
 
             Log.d("MyLogs", "Alarm ${getTime(time)}")
@@ -69,14 +57,12 @@ class AlarmBroadcast : BroadcastReceiver() {
 
         alarmManager.setClock(
             getAlarmInfo(alarm.endTime, context, activityIntent),
-            getPendingIntentBasedOnTime(alarm.endTime)
+            getPendingIntentBasedOnTime(context, alarm.endTime)
         )
 
         if (Build.VERSION.SDK_INT >= 31) {
             Log.d("MyLogs", alarmManager.canScheduleExactAlarms().toString())
         }
-
-        return intents
     }
 
     private fun getTime(time: Long) = SimpleDateFormat("HH:mm", Locale.getDefault()).format(
@@ -95,7 +81,7 @@ class AlarmBroadcast : BroadcastReceiver() {
             },
             PendingIntent.getActivity(
                 context,
-                1,
+                time.hashCode(),
                 activityIntent,
                 PendingIntent.FLAG_IMMUTABLE
             )

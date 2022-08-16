@@ -1,5 +1,7 @@
 package com.app.clockmanager.data
 
+import android.icu.util.Calendar
+
 class AlarmBuilder {
     private var startTime: Long? = null
     private var endTime: Long? = null
@@ -12,10 +14,12 @@ class AlarmBuilder {
 
     fun setEndTime(time: Long) {
         startTime?.let { start ->
-            if (time < start) throw IllegalArgumentException("End time less than start time")
+            endTime = if (time < start) {
+                time + DAY_IN_MILLIS
+            } else {
+                time
+            }
         }
-
-        endTime = time
     }
 
     fun setPeriod(period: Int) {
@@ -32,4 +36,8 @@ class AlarmBuilder {
         interval =  requireNotNull(period),
         isActive = isActive
     )
+
+    companion object {
+        private const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000
+    }
 }

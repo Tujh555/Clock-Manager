@@ -122,7 +122,7 @@ class MainActivity : AppCompatActivity(), AlarmAdapter.OnSwitchListener {
             rvAlarms.adapter = adapter
             rvAlarms.layoutManager = LinearLayoutManager(this@MainActivity)
             btnDeleteAll.setOnClickListener {
-                viewModel.deleteAll(adapter)
+                viewModel.deleteAll(adapter, broadcast, this@MainActivity)
             }
         }
     }

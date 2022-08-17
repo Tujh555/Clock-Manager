@@ -3,9 +3,11 @@ package com.app.clockmanager.services
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
@@ -17,16 +19,26 @@ import com.app.clockmanager.playSound.SoundPlayer
 import com.app.clockmanager.ui.WakeUpActivity
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.random.Random
 
 class AlarmService : LifecycleService() {
     private val player: SoundPlayer by lazy { DefaultSoundPlayer(this) }
     private val notificationManager: NotificationManager
         get() = getSystemService(NotificationManager::class.java)
+    private val stopServiceIntent = PendingIntent.getService(
+        this,
+        Random.nextInt(),
+        Intent(applicationContext, AlarmService::class.java).apply {
+            action = ServiceCommands.STOP.toString()
+        },
+        PendingIntent.FLAG_IMMUTABLE
+    )
 
     override fun onCreate() {
         super.onCreate()
         player.prepareToPlay()
         showNotification()
+
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -52,8 +64,8 @@ class AlarmService : LifecycleService() {
                     player.play()
 
                     startActivity(
-                        Intent(applicationContext, WakeUpActivity::class.java).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                        Intent(this, WakeUpActivity::class.java).apply {
+                            setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
                     )
                 }
@@ -63,6 +75,9 @@ class AlarmService : LifecycleService() {
                         stop()
                         release()
                     }
+
+                    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    notificationManager.cancelAll()
 
                     stopSelf()
                 }
@@ -99,27 +114,11 @@ class AlarmService : LifecycleService() {
                 NotificationCompat.Action(
                     R.drawable.ic_baseline_arrow_right_alt_24,
                     "Stop",
-                    PendingIntent.getService(
-                        this,
-                        0,
-                        Intent(applicationContext, AlarmService::class.java).apply {
-                            action = ServiceCommands.STOP.toString()
-                        },
-                        PendingIntent.FLAG_IMMUTABLE
-                    )
+                    stopServiceIntent
                 )
+            ).setDeleteIntent(
+                stopServiceIntent
             )
-
-        builder.setDeleteIntent(
-            PendingIntent.getService(
-                this,
-                0,
-                Intent(applicationContext, AlarmService::class.java).apply {
-                    action = ServiceCommands.STOP.toString()
-                },
-                PendingIntent.FLAG_IMMUTABLE
-            )
-        )
 
         NotificationManagerCompat.from(this)
             .notify(NOTIFICATION_ID, builder.build())

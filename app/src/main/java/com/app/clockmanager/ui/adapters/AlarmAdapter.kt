@@ -1,5 +1,6 @@
 package com.app.clockmanager.ui.adapters
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,6 +42,13 @@ class AlarmAdapter : RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder>() {
     inner class AlarmViewHolder(
         private val binding: AlarmItemBinding
     ) : RecyclerView.ViewHolder(binding.root) {
+        private val switchListener by lazy {
+            try {
+                binding.root.context as OnSwitchListener
+            } catch (e: ClassCastException) {
+                null
+            }
+        }
 
         fun bind(alarm: Alarm) {
             binding.run {
@@ -51,8 +59,16 @@ class AlarmAdapter : RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder>() {
                     alarm.interval.div(60 * 1000).toString()
                 )
                 swOnAlarm.isChecked = alarm.isActive
+
+                swOnAlarm.setOnCheckedChangeListener { _, b ->
+                    switchListener?.onSwitch(b, alarm)
+                }
             }
         }
+    }
+
+    fun interface OnSwitchListener {
+        fun onSwitch(res: Boolean, alarm: Alarm)
     }
 }
 

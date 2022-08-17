@@ -21,11 +21,12 @@ class AlarmBroadcast : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val wakeLock = powerManager.newWakeLock(
-            PowerManager.PARTIAL_WAKE_LOCK,
+            PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_BRIGHT_WAKE_LOCK,
             WAKE_LOCK_TAG
         )
 
         wakeLock.acquire(30_000)
+
         context.startService(
             Intent(context, AlarmService::class.java).apply {
                 action = ServiceCommands.PLAY.toString()
@@ -34,13 +35,10 @@ class AlarmBroadcast : BroadcastReceiver() {
         )
 
         Log.d("MyLogs", "Broadcast received")
-
-        wakeLock.release()
     }
 
     fun setAlarm(context: Context, alarm: Alarm) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intents = mutableListOf<PendingIntent>()
 
         val activityIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -69,9 +67,18 @@ class AlarmBroadcast : BroadcastReceiver() {
         Date(time)
     )
 
-    fun cancelAlarm(context: Context, pendingIntent: PendingIntent) {
+    fun cancelAlarm(context: Context, alarm: Alarm) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.cancel(pendingIntent)
+
+        for (time in (alarm.startTime..alarm.endTime) step alarm.interval.toLong()) {
+            alarmManager.cancel(
+                getPendingIntentBasedOnTime(context, time)
+            )
+        }
+
+        alarmManager.cancel(
+            getPendingIntentBasedOnTime(context, alarm.endTime)
+        )
     }
 
     private fun getAlarmInfo(time: Long, context: Context, activityIntent: Intent) =

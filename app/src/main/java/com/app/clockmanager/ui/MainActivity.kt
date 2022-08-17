@@ -1,7 +1,5 @@
 package com.app.clockmanager.ui
 
-import android.app.PendingIntent
-import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -13,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.app.clockmanager.contracts.DrawOverlayContract
+import com.app.clockmanager.data.Alarm
 import com.app.clockmanager.data.AlarmBuilder
 import com.app.clockmanager.databinding.ActivityMainBinding
 import com.app.clockmanager.receivers.AlarmBroadcast
@@ -24,7 +23,7 @@ import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import java.util.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), AlarmAdapter.OnSwitchListener {
     private var binding: ActivityMainBinding? = null
     private val bd: ActivityMainBinding
         get() = requireNotNull(binding)
@@ -103,6 +102,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(bd.root)
 
+
         bd.btnAddAlarm.setOnClickListener(newAlarmClickListener)
         timerPickStart.addOnPositiveButtonClickListener(positiveStartClickListener)
         timerPickEnd.addOnPositiveButtonClickListener(positiveEndClickListener)
@@ -157,9 +157,22 @@ class MainActivity : AppCompatActivity() {
             set(Calendar.HOUR_OF_DAY, timePicker.hour)
         }.timeInMillis
 
+    override fun onSwitch(res: Boolean, alarm: Alarm) {
+        alarm.isActive = res
+
+        if (alarm.isActive) {
+            broadcast.setAlarm(this, alarm)
+        } else {
+            broadcast.cancelAlarm(this, alarm)
+        }
+
+        viewModel.updateAlarm(alarm)
+    }
+
     companion object {
         private const val START_TIME_PICK_FRAGMENT = "Start time fragment"
         private const val END_TIME_PICK_FRAGMENT = "End time fragment"
         private const val PERIOD_PICK_FRAGMENT = "Period fragment"
     }
+
 }

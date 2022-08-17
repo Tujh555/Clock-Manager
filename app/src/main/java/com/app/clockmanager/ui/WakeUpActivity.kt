@@ -1,34 +1,41 @@
 package com.app.clockmanager.ui
 
-import android.content.Intent
-import android.media.MediaPlayer
-import android.media.Ringtone
-import android.media.RingtoneManager
-import androidx.appcompat.app.AppCompatActivity
+import android.app.KeyguardManager
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
+import android.view.WindowManager
+import androidx.appcompat.app.AppCompatActivity
 import com.app.clockmanager.R
-import com.app.clockmanager.playSound.DefaultSoundPlayer
-import com.app.clockmanager.services.AlarmService
-import com.app.clockmanager.services.ServiceCommands
 
 class WakeUpActivity : AppCompatActivity() {
-    private var ringtone: Ringtone? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_wake_up)
 
-        Log.d("MyLogs", "WakeUpActivity ${ringtone?.toString() ?: "null"}")
-    }
+        if (Build.VERSION.SDK_INT >= 27) {
+            setTurnScreenOn(true)
+            setShowWhenLocked(true)
 
-    override fun onDestroy() {
-        val stopServiceIntent = Intent(this, AlarmService::class.java).apply {
-            action = ServiceCommands.STOP.toString()
+            val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+            keyguardManager.requestDismissKeyguard(this, null)
+        } else {
+            this.window.addFlags(
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            )
         }
-
-        startService(stopServiceIntent)
-
-        super.onDestroy()
     }
+
+//    override fun onDestroy() {
+//        val stopServiceIntent = Intent(this, AlarmService::class.java).apply {
+//            action = ServiceCommands.STOP.toString()
+//        }
+//
+//        startService(stopServiceIntent)
+//
+//        super.onDestroy()
+//    }
 }

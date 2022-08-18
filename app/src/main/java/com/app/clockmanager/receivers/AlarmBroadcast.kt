@@ -13,11 +13,11 @@ import com.app.clockmanager.data.Alarm
 import com.app.clockmanager.services.AlarmService
 import com.app.clockmanager.services.ServiceCommands
 import com.app.clockmanager.ui.MainActivity
+import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-class AlarmBroadcast : BroadcastReceiver() {
-
+class AlarmBroadcast(private val scope: CoroutineScope) : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val wakeLock = powerManager.newWakeLock(
@@ -30,7 +30,6 @@ class AlarmBroadcast : BroadcastReceiver() {
         context.startService(
             Intent(context, AlarmService::class.java).apply {
                 action = ServiceCommands.PLAY.toString()
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
         )
 
@@ -38,28 +37,34 @@ class AlarmBroadcast : BroadcastReceiver() {
     }
 
     fun setAlarm(context: Context, alarm: Alarm) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        scope.launch {
+            withContext(Dispatchers.Default) {
+                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        val activityIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
+                val activityIntent = Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
 
-        for (time in (alarm.startTime..alarm.endTime) step alarm.interval.toLong()) {
-            alarmManager.setClock(
-                getAlarmInfo(time, context, activityIntent),
-                getPendingIntentBasedOnTime(context, time)
-            )
+                val currentDate = Date()
 
-            Log.d("MyLogs", "Alarm ${getTime(time)}")
-        }
+                for (time in (alarm.startTime..alarm.endTime) step alarm.interval.toLong()) {
+                    if (time > currentDate.time) {
+                        alarmManager.setClock(
+                            getAlarmInfo(time, context, activityIntent),
+                            getPendingIntentBasedOnTime(context, time)
+                        )
+                    }
 
-        alarmManager.setClock(
-            getAlarmInfo(alarm.endTime, context, activityIntent),
-            getPendingIntentBasedOnTime(context, alarm.endTime)
-        )
+                    Log.d("MyLogs", "Alarm ${getTime(time)}")
+                }
 
-        if (Build.VERSION.SDK_INT >= 31) {
-            Log.d("MyLogs", alarmManager.canScheduleExactAlarms().toString())
+                alarmManager.setClock(
+                    getAlarmInfo(alarm.endTime, context, activityIntent),
+                    getPendingIntentBasedOnTime(context, alarm.endTime)
+                )
+
+                Log.d("MyLogs", "Alarm ${getTime(alarm.endTime)}")
+            }
         }
     }
 
@@ -68,24 +73,30 @@ class AlarmBroadcast : BroadcastReceiver() {
     )
 
     fun cancelAlarm(context: Context, alarm: Alarm) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        scope.launch {
+            withContext(Dispatchers.Default) {
+                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        for (time in (alarm.startTime..alarm.endTime) step alarm.interval.toLong()) {
-            alarmManager.cancel(
-                getPendingIntentBasedOnTime(context, time)
-            )
+                for (time in (alarm.startTime..alarm.endTime) step alarm.interval.toLong()) {
+                    alarmManager.cancel(
+                        getPendingIntentBasedOnTime(context, time)
+                    )
+
+                    Log.d("MyLogs", "Cancelled ${getTime(time)}")
+                }
+
+                alarmManager.cancel(
+                    getPendingIntentBasedOnTime(context, alarm.endTime)
+                )
+
+                Log.d("MyLogs", "Cancelled ${getTime(alarm.endTime)}")
+            }
         }
-
-        alarmManager.cancel(
-            getPendingIntentBasedOnTime(context, alarm.endTime)
-        )
     }
 
     private fun getAlarmInfo(time: Long, context: Context, activityIntent: Intent) =
         AlarmManager.AlarmClockInfo(
-            time.apply {
-                Log.d("MyLogs", "time = ${getTime(time)}")
-            },
+            time,
             PendingIntent.getActivity(
                 context,
                 time.hashCode(),
@@ -98,7 +109,6 @@ class AlarmBroadcast : BroadcastReceiver() {
         info: AlarmManager.AlarmClockInfo,
         pendingIntent: PendingIntent
     ) {
-        Log.d("MyLogs", "Clock set")
         setAlarmClock(
             info,
             pendingIntent

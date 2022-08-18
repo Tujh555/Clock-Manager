@@ -12,12 +12,14 @@ data class AlarmEntity(
     val endTime: Long,
     val interval: Int,
     var isActive: Boolean,
+    var isLooping: Boolean
 ) {
     fun toAlarm() = Alarm(
         id = id,
         startTime = startTime,
         endTime = endTime,
         interval = interval,
-        isActive = isActive
+        isActive = isActive,
+        isLooping = isLooping,
     )
 }

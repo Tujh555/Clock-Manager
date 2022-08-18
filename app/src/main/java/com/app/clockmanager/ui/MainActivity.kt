@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity(), AlarmAdapter.OnSwitchListener {
     private var binding: ActivityMainBinding? = null
     private val bd: ActivityMainBinding
         get() = requireNotNull(binding)
-    private val broadcast by lazy { AlarmBroadcast() }
+    private val broadcast by lazy { AlarmBroadcast(lifecycleScope) }
     private val adapter by lazy { AlarmAdapter() }
 
     private val timerPickStart = getTimerPick("Выберите стартовое время для будильника  ")

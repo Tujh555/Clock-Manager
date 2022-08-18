@@ -24,10 +24,11 @@ class RebootAlarmsReceiver : BroadcastReceiver() {
     }
 
     private fun setAllAlarms(context: Context) {
-        val alarmBroadcast = AlarmBroadcast()
         val getAlarms = GetAllAlarmsUseCaseImpl(DatabaseRepository.get())
 
         CoroutineScope(Dispatchers.IO).launch {
+            val alarmBroadcast = AlarmBroadcast(this)
+
             getAlarms().collect { alarms ->
                 alarms.forEach { alarmEntity ->
                     if (alarmEntity.isActive) {

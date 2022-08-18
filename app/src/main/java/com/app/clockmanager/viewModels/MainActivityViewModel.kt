@@ -55,7 +55,7 @@ class MainActivityViewModel(
             adapter.alarms.forEach {
                 Log.d("MyLogs", it.id.toString())
 
-                CoroutineScope(Dispatchers.Default).launch {
+                coroutineScope {
                     broadcast.cancelAlarm(context, it)
                 }
 
@@ -71,9 +71,8 @@ class MainActivityViewModel(
     }
 
     fun updateAlarm(alarm: Alarm) {
-        latestUpdateJob?.cancel()
-
         latestUpdateJob = viewModelScope.launch {
+            latestUpdateJob?.join()
             updateAlarmUseCase(alarmEntity = alarm.toAlarmEntity())
         }
     }

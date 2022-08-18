@@ -32,7 +32,6 @@ class PeriodPickDialogFragment : DialogFragment() {
 
         binding?.run {
             applyPeriod.setOnClickListener {
-                Log.d("MyLogs", period.toString())
                 periodApplyClickListener?.onClick(period)
                 dismiss()
             }

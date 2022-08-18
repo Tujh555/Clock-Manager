@@ -8,13 +8,15 @@ data class Alarm(
     val startTime: Long,
     val endTime: Long,
     val interval: Int,
-    var isActive: Boolean = true
+    var isActive: Boolean = true,
+    var isLooping: Boolean = false,
 ) {
     fun toAlarmEntity() = AlarmEntity(
         id = id,
         startTime = startTime,
         endTime = endTime,
         interval = interval,
-        isActive = isActive
+        isActive = isActive,
+        isLooping = isLooping
     )
 }

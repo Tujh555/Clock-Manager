@@ -6,8 +6,8 @@ import java.util.*
 class AlarmTypeConverters {
 
     @TypeConverter
-    fun fromUUID(uuid: UUID) = uuid.toString()
+    fun fromUUID(uuid: UUID): String = uuid.toString()
 
     @TypeConverter
-    fun toUUID(str: String) = UUID.fromString(str)
+    fun toUUID(str: String): UUID = UUID.fromString(str)
 }

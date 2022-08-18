@@ -11,13 +11,20 @@ class DefaultSoundPlayer(private val context: Context) : SoundPlayer {
 
     override fun play() {
         mediaPlayer?.run {
-            setVolume(1.0f, 1.0f)
-            start()
+           if (!isPlaying) {
+               setVolume(1.0f, 1.0f)
+               isLooping = true
+               start()
+           }
         }
     }
 
     override fun stop() {
-        mediaPlayer?.stop()
+        mediaPlayer?.run {
+            if (isPlaying) {
+                stop()
+            }
+        }
     }
 
     override fun release() {

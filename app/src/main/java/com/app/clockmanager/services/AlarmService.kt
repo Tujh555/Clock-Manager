@@ -25,20 +25,21 @@ class AlarmService : LifecycleService() {
     private val player: SoundPlayer by lazy { DefaultSoundPlayer(this) }
     private val notificationManager: NotificationManager
         get() = getSystemService(NotificationManager::class.java)
-    private val stopServiceIntent = PendingIntent.getService(
-        this,
-        Random.nextInt(),
-        Intent(applicationContext, AlarmService::class.java).apply {
-            action = ServiceCommands.STOP.toString()
-        },
-        PendingIntent.FLAG_IMMUTABLE
-    )
+    private val stopServiceIntent by lazy {
+        PendingIntent.getService(
+            this,
+            Random.nextInt(),
+            Intent(this, AlarmService::class.java).apply {
+                action = ServiceCommands.STOP.toString()
+            },
+            PendingIntent.FLAG_IMMUTABLE
+        )
+    }
 
     override fun onCreate() {
         super.onCreate()
         player.prepareToPlay()
         showNotification()
-
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -62,12 +63,6 @@ class AlarmService : LifecycleService() {
             when (it.action) {
                 ServiceCommands.PLAY.toString() -> {
                     player.play()
-
-                    startActivity(
-                        Intent(this, WakeUpActivity::class.java).apply {
-                            setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                    )
                 }
 
                 ServiceCommands.STOP.toString() -> {
@@ -76,7 +71,8 @@ class AlarmService : LifecycleService() {
                         release()
                     }
 
-                    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    val notificationManager =
+                        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.cancelAll()
 
                     stopSelf()
@@ -131,7 +127,7 @@ class AlarmService : LifecycleService() {
     }
 
     companion object {
-        const val DURATION_KEY = "duration_key"
+        //const val DURATION_KEY = "duration_key"
         const val NOTIFICATION_BUILDER_ID = "notification_builder"
         const val NOTIFICATION_ID = 1
         const val NOTIFICATION_CHANNEL_ID = "notification_channel_1"
